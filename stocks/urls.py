@@ -1,7 +1,6 @@
 from django.urls import path
-
-from stocks import views
+from .views import stock_search
 
 urlpatterns = [
-    path("stocks/", views.get_stock_data, name="get_stock_data"),
+    path('', stock_search, name='stock_search'),
 ]
