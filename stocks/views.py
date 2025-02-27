@@ -2,7 +2,8 @@ from django.shortcuts import render
 import yfinance as yf
 import json
 from django.http import JsonResponse
-
+# import random
+# from .models import ListAmericanCompanies
 
 def stock_search(request):
     context = {}
@@ -61,3 +62,31 @@ def stock_search(request):
         context['error'] = f"Error fetching data for {ticker}: {str(e)}"
 
     return render(request, 'index.html', context)
+
+
+#def get_other_stocks():
+#    all_stocks = list(ListAmericanCompanies.objects.all())
+#    selected_stocks = random.sample(all_stocks, min(len(all_stocks), 4))  # Pick 4 random stocks
+#
+#    other_stocks = []
+#    for stock_entry in selected_stocks:
+#        try:
+#            stock = yf.Ticker(stock_entry.ticker)
+#            today_data = stock.history(period="1d")
+#
+#            current_price = round(today_data['Close'].iloc[-1], 2) if not today_data.empty else "N/A"
+#            open_price = today_data['Open'].iloc[-1] if not today_data.empty else None
+#
+#            change = round(((current_price - open_price) / open_price * 100), 2) if open_price else "N/A"
+#
+#            other_stocks.append({
+#                'ticker': stock_entry.ticker,
+#                'name': stock_entry.title,  # Use title from the database
+#                'price': current_price,
+#                'change': change
+#            })
+#        except Exception as e:
+#            print(f"Error fetching data for {stock_entry.ticker}: {e}")
+#            continue  # Skip to next stock instead of breaking
+#
+#    return other_stocks
