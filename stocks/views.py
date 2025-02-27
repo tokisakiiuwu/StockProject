@@ -11,6 +11,8 @@ def stock_search(request):
 
     # Default values
     ticker = "AAPL"
+    # maybe change to  ticker = request.GET.get('ticker', 'AAPL')  so clicking an 'other stock' can
+    # bring us to the main page? I'm not sure
     period = request.GET.get('period', '1y')  # Default to 1 year if no period is provided
 
     if request.method == 'POST':
