@@ -5,6 +5,7 @@ from django.http import JsonResponse
 # import random
 # from .models import ListAmericanCompanies
 
+
 def stock_search(request):
     context = {}
 
