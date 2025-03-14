@@ -143,14 +143,16 @@
                 <div class="other-stocks-container">
                     <h3>Other Related Stocks</h3>
                     {% for stock in other_stocks %}
-                        <div class="stock-card">
-                            <div>
-                                <strong>{{ stock.name }} ({{ stock.ticker }})</strong> - ${{ stock.price|floatformat:2 }}
+                        <a href="/?ticker={{ stock.ticker }}" style="text-decoration: none; color: inherit;">
+                            <div class="stock-card">
+                                <div>
+                                    <strong>{{ stock.name }} ({{ stock.ticker }})</strong> - ${{ stock.price|floatformat:2 }}
+                                </div>
+                                <div class="{% if stock.change >= 0 %}positive{% else %}negative{% endif %}">
+                                    {% if stock.change != "N/A" %}{{ stock.change }}%{% else %}N/A{% endif %}
+                                </div>
                             </div>
-                            <div class="{% if stock.change >= 0 %}positive{% else %}negative{% endif %}">
-                                {% if stock.change != "N/A" %}{{ stock.change }}%{% else %}N/A{% endif %}
-                            </div>
-                        </div>
+                        </a>
                     {% endfor %}
                 </div>
             {% endif %}
