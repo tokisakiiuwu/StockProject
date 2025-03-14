@@ -5,28 +5,28 @@
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; }
-        .info-box { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .search-container, .text-container, .info-container{ margin-bottom: 20px; }
+        .info-box { display: flex; flex-direction: column; gap: 10px; }
+        .search-container, .text-container { margin-bottom: 20px; }
         .search-container {
             display: flex;
             align-items: center;
             padding: 12px 20px;
-            background: #f5f5f5; 
-            border-radius: 30px; 
-            max-width: 600px; 
-            margin: 20px auto; 
+            background: #f5f5f5;
+            border-radius: 30px;
+            max-width: 600px;
+            margin: 20px auto;
             position: relative;
-        }  
+        }
         .search-container input {
             flex: 1; /* Allow input to take most of the space */
-            padding: 10px 50px 10px 20px; 
+            padding: 10px 50px 10px 20px;
             border: none;
             outline: none;
             font-size: 18px;
             background: transparent;
             border-radius: 30px;
-            text-align: left; 
-            color: #888; 
+            text-align: left;
+            color: #888;
         }
         .search-container input::placeholder {
             color: #bbb;
@@ -37,27 +37,56 @@
             border: none;
             cursor: pointer;
             font-size: 20px;
-            color: #888; 
+            color: #888;
             display: flex;
             align-items: center;
             justify-content: center;
             position: absolute;
-            right: 20px; 
+            right: 20px;
             top: 50%; /* Center vertically */
-            transform: translateY(-50%); 
-            width: 40px; 
-            height: 40px; 
-            padding: 0; 
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            padding: 0;
         }
-        .search-container button::before {
-            content: "🔍"; 
-            font-size: 20px;
+        .button-group { 
+            text-align: center; 
+            margin-top: 20px; 
+            margin-bottom: 20px; 
         }
-        .button-group { text-align: left; margin-bottom: 20px; }
-        .button-group button:hover { background-color: #2563eb; }
+        .button-group button { 
+            padding: 8px 12px; /* Smaller buttons */
+            border: none; 
+            cursor: pointer; 
+            background: #eee; 
+            border-radius: 5px; 
+            font-size: 14px; /* Smaller font */
+            margin: 0 5px; 
+        }
+        .button-group button:hover { 
+            background-color: #2563eb; 
+            color: white; 
+        }
         .stock-card { border: 1px solid #ddd; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; }
         .positive { color: green; font-weight: bold; }
         .negative { color: red; font-weight: bold; }
+        .chart-container {
+            width: 100%;
+        }
+        .info-container {
+            width: 50%; /* Half the width of the container */
+            margin-top: 20px;
+        }
+        .info-item {
+            font-size: 16px;
+            font-weight: bold;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: left;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
@@ -65,10 +94,10 @@
 
         <!-- Search Bar -->
         <div class="search-container">
-            <form method="post">
+            <form method="get" action="/">  
                 {% csrf_token %}
-                <input type="text" id="ticker" placeholder="Search for a stock" required>
-                <button onclick="fetchStockData()"></button>
+                <input type="text" id="ticker" name="ticker" placeholder="Search for a stock" required>
+                <button type="submit">🔍</button> 
             </form>
         </div>
 
@@ -104,7 +133,7 @@
             <div class="info-container">
                 <div class="info-box">
                     {% for key, value in info.items %}
-                        <div><strong>{{ key }}:</strong> {{ value }}</div>
+                        <div class="info-item"><strong>{{ key }}:</strong> {{ value }}</div>
                     {% endfor %}
                 </div>
             </div>
@@ -164,7 +193,8 @@
 
                 // Function to update chart dynamically
                 function updateChart(period) {
-                    fetch(`?period=${period}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                    const ticker = "{{ ticker }}";  
+                    fetch(`/?ticker=${ticker}&period=${period}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                         .then(response => response.json())
                         .then(data => {
                             plotChart(data.chart_data);
