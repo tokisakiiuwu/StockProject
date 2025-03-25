@@ -3,4 +3,5 @@ from .views import stock_search
 
 urlpatterns = [
     path('', stock_search, name='stock_search'),
+    path('portfolio/', portfolio, name='portfolio'),
 ]
