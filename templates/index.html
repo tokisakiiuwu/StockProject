@@ -161,7 +161,7 @@
                 <div class="other-stocks-container">
                     <h3>Other Related Stocks</h3>
                     {% for stock in other_stocks %}
-                        <div class="stock-card">
+                        <div class="stock-card" onclick="window.location.href='/?ticker={{ stock.ticker }}'" style="cursor: pointer;">
                             <div>
                                 <strong>{{ stock.name }} ({{ stock.ticker }})</strong> - ${{ stock.price|floatformat:2 }}
                             </div>
