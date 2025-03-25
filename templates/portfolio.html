@@ -13,6 +13,53 @@
         .btn-add { background-color: #4CAF50; color: white; }
         .btn-remove { background-color: #f44336; color: white; }
         .btn-optimize { background-color: #2563eb; color: white; }
+        
+        /* Optimized Portfolio Section */
+        #optimized-portfolio { margin-top: 30px; }
+        #optimized-portfolio h2 { color: #2d3e50; font-size: 24px; margin-bottom: 20px; text-align: center; }
+
+        .portfolio-list { 
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .portfolio-item { 
+            background-color: #f8f9fa;
+            padding: 20px;
+            margin: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            width: 250px;
+            text-align: center;
+            font-size: 18px;
+            transition: background-color 0.3s ease;
+        }
+
+        .portfolio-item:hover { 
+            background-color: #e9ecef;
+            cursor: pointer;
+        }
+
+        .stock-name {
+            font-weight: bold;
+            color: #007bff;
+            font-size: 20px;
+        }
+
+        .allocation {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 22px;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .portfolio-item {
+                width: 100%;
+                margin: 10px 0;
+            }
+        }
     </style>
 </head>
 <body>
@@ -47,9 +94,11 @@
             <button class="btn-optimize" onclick="submitPortfolio()">🚀 Optimize</button>
         </div>
 
-        <h2>Optimized Portfolio</h2>
-        <div id="optimized-portfolio"></div>
-        <div id="pie-chart"></div>
+        <div id="optimized-portfolio">
+            <h2>Optimized Portfolio</h2>
+            <!-- Optimized portfolio will be displayed here -->
+        </div>
+
     </div>
 
     <script>
@@ -87,15 +136,24 @@
             })
             .then(response => response.json())
             .then(data => {
-                document.getElementById("optimized-portfolio").innerHTML = "<ul>" + 
-                    Object.keys(data.portfolio).map(stock => `<li><b>${stock}</b>: ${data.portfolio[stock].toFixed(2)}%</li>`).join("") + "</ul>";
+                // Clear any existing portfolio
+                const optimizedPortfolio = data.portfolio;
+                let portfolioHtml = "<div class='portfolio-list'>";
                 
-                let chartData = [{
-                    values: Object.values(data.portfolio),
-                    labels: Object.keys(data.portfolio),
-                    type: "pie"
-                }];
-                Plotly.newPlot("pie-chart", chartData);
+                // Build the optimized portfolio list
+                for (let stock in optimizedPortfolio) {
+                    portfolioHtml += `
+                        <div class="portfolio-item">
+                            <div class="stock-name"><b>${stock}</b></div>
+                            <div class="allocation">${optimizedPortfolio[stock].toFixed(2)}%</div>
+                        </div>
+                    `;
+                }
+
+                portfolioHtml += "</div>";
+
+                // Insert the portfolio items into the container
+                document.getElementById("optimized-portfolio").innerHTML = portfolioHtml;
             })
             .catch(error => console.error("Error:", error));
         }
