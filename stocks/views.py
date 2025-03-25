@@ -1,12 +1,20 @@
+import torch
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.cache import cache
+import numpy as np
+from .predictionModels.utils import load_trained_model, predict_next_month_return
+import pandas as pd
 import yfinance as yf
 import json
 import time
 
 from .models import ListAmericanCompanies
 
+
+
+def portfolio(request):
+    return render(request, 'portfolio.html')
 
 def get_stock_history_cached(ticker, period='2y', cache_timeout=60):
     """
@@ -109,7 +117,6 @@ def get_other_stocks(main_ticker):
         print(f"Error fetching related stocks for {main_ticker}: {e}")
         return []
 
-
 def stock_search(request):
     """
     Main stock search view using caching & graceful handling of rate-limit errors.
@@ -201,3 +208,12 @@ def stock_search(request):
             context['error'] = f"Error fetching data for {ticker}: {error_msg}"
 
     return render(request, 'index.html', context)
+
+
+def fetch_stock_data(tickers):
+    data = {}
+    for ticker in tickers:
+        stock = yf.Ticker(ticker)
+        df = stock.history(period="1y")["Close"]
+        data[ticker] = df
+    return pd.DataFrame(data)
