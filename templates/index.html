@@ -5,15 +5,22 @@
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
         .container { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; }
+        .header-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
         .info-box { display: flex; flex-direction: column; gap: 10px; }
         .search-container, .text-container { margin-bottom: 20px; }
         .search-container {
+            flex: 1;
             display: flex;
             align-items: center;
             padding: 12px 20px;
             background: #f5f5f5;
             border-radius: 30px;
-            max-width: 600px;
+            width: 600px;
             margin: 20px auto;
             position: relative;
         }
@@ -49,9 +56,11 @@
             height: 40px;
             padding: 0;
         }
+        .portfolio-container {
+            margin-left: 20px;
+        }
         .button-group { 
-            text-align: center; 
-            margin-top: 20px; 
+            text-align: left;
             margin-bottom: 20px; 
         }
         .button-group button { 
@@ -91,15 +100,24 @@
 </head>
 <body>
     <div class="container">
-
-        <!-- Search Bar -->
-        <div class="search-container">
-            <form method="get" action="/">  
-                {% csrf_token %}
-                <input type="text" id="ticker" name="ticker" placeholder="Search for a stock" required>
-                <button type="submit">🔍</button> 
-            </form>
+        <div class="header-container">
+            <!-- Search Bar -->
+            <div class="search-container">
+                <form method="get" action="/">  
+                    {% csrf_token %}
+                    <input type="text" id="ticker" name="ticker" placeholder="Search for a stock" required>
+                    <button type="submit">🔍</button>
+                </form>
+            </div>
+            
+            <div class="portfolio-container">
+                <a href="{% url 'portfolio' %}">
+                    <button>Portfolio</button>
+                </a>
+            </div>
+            
         </div>
+        
 
         {% if error %}
             <p style="color: red;">{{ error }}</p >
@@ -143,16 +161,14 @@
                 <div class="other-stocks-container">
                     <h3>Other Related Stocks</h3>
                     {% for stock in other_stocks %}
-                        <a href="/?ticker={{ stock.ticker }}" style="text-decoration: none; color: inherit;">
-                            <div class="stock-card">
-                                <div>
-                                    <strong>{{ stock.name }} ({{ stock.ticker }})</strong> - ${{ stock.price|floatformat:2 }}
-                                </div>
-                                <div class="{% if stock.change >= 0 %}positive{% else %}negative{% endif %}">
-                                    {% if stock.change != "N/A" %}{{ stock.change }}%{% else %}N/A{% endif %}
-                                </div>
+                        <div class="stock-card">
+                            <div>
+                                <strong>{{ stock.name }} ({{ stock.ticker }})</strong> - ${{ stock.price|floatformat:2 }}
                             </div>
-                        </a>
+                            <div class="{% if stock.change >= 0 %}positive{% else %}negative{% endif %}">
+                                {% if stock.change != "N/A" %}{{ stock.change }}%{% else %}N/A{% endif %}
+                            </div>
+                        </div>
                     {% endfor %}
                 </div>
             {% endif %}
