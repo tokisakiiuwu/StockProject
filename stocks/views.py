@@ -1,9 +1,6 @@
-import torch
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core.cache import cache
-import numpy as np
-from .predictionModels.utils import load_trained_model, predict_next_month_return
 import pandas as pd
 import yfinance as yf
 import json
