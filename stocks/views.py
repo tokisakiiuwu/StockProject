@@ -14,54 +14,47 @@ import numpy as np
 
 def optimize_portfolio(request):
     """
-    This view takes the tickers and allocations submitted by the user,
-    performs a basic Minimum Variance Optimization, and returns the optimized portfolio.
+    Computes the Minimum Variance Portfolio (MVP) analytically.
     """
     if request.method == 'POST':
         try:
-            # Parse the incoming JSON request data
+            # Parse request data
             data = json.loads(request.body)
             tickers = data.get('tickers')
-            allocations = data.get('allocations')
 
-            if len(tickers) != len(allocations):
-                return JsonResponse({'error': 'Mismatch between tickers and allocations lengths'}, status=400)
+            if not tickers or len(tickers) < 2:
+                return JsonResponse({'error': 'At least two stocks are required for optimization'}, status=400)
 
-            # Download stock price data for the selected tickers
+            # Fetch stock price data
             stock_data = fetch_stock_data(tickers)
 
-            # Convert allocation percentages to decimal (e.g., 50% -> 0.5)
-            allocations = np.array(allocations) / 100
+            # Debug: Check if stock_data updates
+            print("Stock Data:\n", stock_data.tail())
 
-            # Calculate the covariance matrix of the returns
-            returns = stock_data.pct_change().mean()  # Mean daily returns
-            cov_matrix = stock_data.pct_change().cov()  # Covariance matrix
+            returns = stock_data.pct_change().dropna()  # Compute daily returns
 
-            # Perform optimization (minimum variance portfolio)
-            # Calculate the portfolio variance for different weights
-            num_stocks = len(tickers)
-            portfolio_variances = []
-            portfolio_returns = []
-            for i in range(10000):  # Randomly simulate 10,000 portfolios
-                weights = np.random.random(num_stocks)
-                weights /= np.sum(weights)  # Normalize the weights to sum to 1
+            if returns.empty:
+                return JsonResponse({'error': 'No valid return data available'}, status=400)
 
-                # Portfolio return and variance
-                port_return = np.sum(weights * returns)
-                port_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+            # Compute covariance matrix
+            cov_matrix = returns.cov()
 
-                portfolio_returns.append(port_return)
-                portfolio_variances.append(port_variance)
+            # Debug: Check covariance matrix updates
+            print("Covariance Matrix:\n", cov_matrix)
 
-            # Find the minimum variance portfolio
-            min_variance_idx = np.argmin(portfolio_variances)
-            optimal_weights = np.random.random(num_stocks)
-            optimal_weights /= np.sum(optimal_weights)
+            num_assets = len(tickers)
 
-            # Create an optimized portfolio result
-            optimized_portfolio = {
-                tickers[i]: optimal_weights[i] * 100 for i in range(len(tickers))
-            }
+            # Step 1: Check if covariance matrix is singular
+            if np.linalg.det(cov_matrix) == 0:
+                return JsonResponse({'error': 'Covariance matrix is singular. Try different stocks or a longer timeframe.'}, status=400)
+
+            # Step 2: Compute MVP weights analytically
+            ones = np.ones(num_assets)
+            inv_cov = np.linalg.inv(cov_matrix)  # Inverse covariance matrix
+            mvp_weights = inv_cov @ ones / (ones.T @ inv_cov @ ones)  # Formula for MVP
+
+            # Ensure weights are properly scaled to percentages
+            optimized_portfolio = {tickers[i]: round(mvp_weights[i] * 100, 2) for i in range(num_assets)}
 
             return JsonResponse({'portfolio': optimized_portfolio})
 
@@ -332,7 +325,14 @@ def fetch_stock_data(tickers):
     """
     data = {}
     for ticker in tickers:
-        stock = yf.Ticker(ticker)
-        df = stock.history(period="1y")["Close"]
-        data[ticker] = df
+        try:
+            stock = yf.Ticker(ticker)
+            df = stock.history(period="1y")["Close"]
+            if df.empty:
+                print(f"Warning: No data for {ticker}")
+            else:
+                data[ticker] = df
+        except Exception as e:
+            print(f"Error fetching data for {ticker}: {e}")
+
     return pd.DataFrame(data)
