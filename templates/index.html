@@ -4,28 +4,27 @@
     <title>Stocks Chart</title>
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
     <style>
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; }
+         .container { max-width: 1200px; margin: 0 auto; padding: 20px; font-family: Arial, sans-serif; }
         .header-container {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: center;
             width: 100%;
+            gap: 20px;
         }
         .info-box { display: flex; flex-direction: column; gap: 10px; }
         .search-container, .text-container { margin-bottom: 20px; }
         .search-container {
-            flex: 1;
             display: flex;
             align-items: center;
             padding: 12px 20px;
             background: #f5f5f5;
             border-radius: 30px;
-            width: 600px;
-            margin: 20px auto;
+            width: 400px; /* 缩小搜索栏宽度 */
             position: relative;
         }
         .search-container input {
-            flex: 1; /* Allow input to take most of the space */
+            flex: 1;
             padding: 10px 50px 10px 20px;
             border: none;
             outline: none;
@@ -50,15 +49,28 @@
             justify-content: center;
             position: absolute;
             right: 20px;
-            top: 50%; /* Center vertically */
+            top: 50%;
             transform: translateY(-50%);
             width: 40px;
             height: 40px;
             padding: 0;
         }
         .portfolio-container {
-            margin-left: 20px;
+            margin-left: 0;
         }
+        .portfolio-container button {
+        padding: 12px 24px; 
+        font-size: 16px;    
+        background: white;   
+        color: #333;      
+        border: 1px solid #ddd; 
+        border-radius: 30px;   
+        cursor: pointer;
+        transition: all 0.3s ease; 
+    }
+    .portfolio-container button:hover {
+        background: #f5f5f5; 
+    }
         .button-group { 
             text-align: left;
             margin-bottom: 20px; 
