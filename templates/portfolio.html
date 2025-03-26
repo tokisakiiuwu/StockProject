@@ -128,14 +128,12 @@
             <thead>
                 <tr>
                     <th>Stock Ticker</th>
-                    <th>Allocation (%)</th>
                     <th>Action</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <td><input class="stock-input" type="text" name="tickers[]" placeholder="AAPL" required></td>
-                    <td><input class="stock-input" type="number" name="allocations[]" placeholder="20" required></td>
                     <td><button class="form-button" onclick="removeRow(this)">Remove</button></td>
                 </tr>
             </tbody>
@@ -155,7 +153,6 @@
             let newRow = table.insertRow();
             newRow.innerHTML = `
                 <td><input class="stock-input" type="text" name="tickers[]" placeholder="TSLA" required></td>
-                <td><input class="stock-input" type="number" name="allocations[]" placeholder="25" required></td>
                 <td><button class="form-button" onclick="removeRow(this)">Remove</button></td>
             `;
         }
@@ -167,20 +164,17 @@
 
         function submitPortfolio() {
             let tickers = [];
-            let allocations = [];
-
             document.querySelectorAll('input[name="tickers[]"]').forEach(input => tickers.push(input.value.toUpperCase()));
-            document.querySelectorAll('input[name="allocations[]"]').forEach(input => allocations.push(parseFloat(input.value)));
 
-            if (tickers.length === 0 || allocations.length === 0 || allocations.reduce((a, b) => a + b, 0) !== 100) {
-                alert("Ensure allocations sum to 100%");
+            if (tickers.length === 0) {
+                alert("Please add at least one stock ticker");
                 return;
             }
 
             fetch('/optimize/', {
                 method: "POST",
                 headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
-                body: JSON.stringify({ tickers: tickers, allocations: allocations })
+                body: JSON.stringify({ tickers: tickers })
             })
             .then(response => response.json())
             .then(data => {
