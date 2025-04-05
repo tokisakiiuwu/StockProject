@@ -183,11 +183,20 @@
                     resultsDiv.innerHTML = `<p style="color:red;">Error: ${data.error}</p>`;
                 } else {
                     let portfolioHTML = '<h3>Optimized Portfolio</h3><table class="portfolio-table"><tr><th>Stock</th><th>Optimized Allocation (%)</th></tr>';
+                    let hasShort = false;
+
                     for (const [stock, weight] of Object.entries(data.portfolio)) {
+                        if (weight < 0) hasShort = true;
                         portfolioHTML += `<tr><td>${stock}</td><td>${weight}%</td></tr>`;
                     }
                     portfolioHTML += '</table>';
+
+                    if (hasShort) {
+                        portfolioHTML += `<p style="color:orange; margin-top:10px;">Note: Some allocations are negative, indicating short positions. Short selling is not recommended for beginner investors.</p>`;
+                    }
+
                     resultsDiv.innerHTML = portfolioHTML;
+
                 }
             })
             .catch(error => console.error("Error:", error));
