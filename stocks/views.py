@@ -216,6 +216,16 @@ def stock_search(request):
     if request.method == 'POST':
         ticker = request.POST.get('ticker', 'AAPL').upper().split(' - ')[0]
 
+    # Update recent searches
+    recent_searches = cache.get('recent_searches', [])
+
+    # Add current ticker if it's not already in the list
+    if ticker not in recent_searches:
+        recent_searches.insert(0, ticker)
+        # Keep only last 5 searches
+        recent_searches = recent_searches[:5]
+        cache.set('recent_searches', recent_searches, 60 * 60 * 24)  # Cache for 24 hours
+
     period = request.GET.get('period', '2y')  # e.g., 3mo, 6mo, 1y, etc.
 
     try:
@@ -295,6 +305,9 @@ def stock_search(request):
             context['error'] = "Yahoo Finance rate limit exceeded. Please try again in a minute."
         else:
             context['error'] = f"Error fetching data for {ticker}: {error_msg}"
+
+    # Add recent searches to context
+    context['recent_searches'] = recent_searches
 
     return render(request, 'index.html', context)
 
