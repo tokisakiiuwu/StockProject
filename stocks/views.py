@@ -5,6 +5,7 @@ import pandas as pd
 import yfinance as yf
 import json
 import time
+import random
 
 from .models import ListAmericanCompanies
 
@@ -169,56 +170,35 @@ def get_stock_info_cached(ticker, cache_timeout=60):
     cache.set(cache_key, info, cache_timeout)
     return info
 
-
 def get_other_stocks(main_ticker):
     """
-    Fetch related stocks based on industry, sector, or exchange.
-    Include a small delay to avoid burst requests to Yahoo.
+    Fetch 4 random stocks from the ListAmericanCompanies model.
     """
     try:
-        main_info = get_stock_info_cached(main_ticker)
-        if not main_info:
-            return []  # Possibly rate-limited or error
-
-        industry = main_info.get('industry')
-        sector = main_info.get('sector')
-        exchange = main_info.get('exchange')  # e.g. "NASDAQ"
-
-        # Fetch up to 50 potential related stocks
+        # Fetch up to 50 potential stocks from the database
         similar_stocks = ListAmericanCompanies.objects.exclude(ticker=main_ticker)[:50]
 
+        # Randomly select 4 stocks from the available list
+        random_stocks = random.sample(list(similar_stocks), 4)
+
         other_stocks = []
-        for entry in similar_stocks:
-            time.sleep(0.2)  # Throttle slightly between each request
+        for entry in random_stocks:
+            # Fetch today's data for the random stock
+            day_data = get_stock_history_cached(entry.ticker, period="1d", cache_timeout=60)
+            if day_data is not None and not day_data.empty:
+                current_price = round(day_data['Close'].iloc[-1], 2)
+                open_price = day_data['Open'].iloc[-1]
+                change = round(((current_price - open_price) / open_price) * 100, 2)
+            else:
+                current_price = "N/A"
+                change = "N/A"
 
-            s_info = get_stock_info_cached(entry.ticker)
-            if not s_info:
-                continue
-
-            same_industry = industry and (s_info.get('industry') == industry)
-            same_sector = sector and (s_info.get('sector') == sector)
-            same_exchange = exchange and (s_info.get('exchange') == exchange)
-
-            if same_industry or same_sector or same_exchange:
-                # Get today's data
-                day_data = get_stock_history_cached(entry.ticker, period="1d", cache_timeout=60)
-                if day_data is not None and not day_data.empty:
-                    current_price = round(day_data['Close'].iloc[-1], 2)
-                    open_price = day_data['Open'].iloc[-1]
-                    change = round(((current_price - open_price) / open_price) * 100, 2)
-                else:
-                    current_price = "N/A"
-                    change = "N/A"
-
-                other_stocks.append({
-                    'ticker': entry.ticker,
-                    'name': entry.title,
-                    'price': current_price,
-                    'change': change
-                })
-
-            if len(other_stocks) >= 4:
-                break
+            other_stocks.append({
+                'ticker': entry.ticker,
+                'name': entry.title,
+                'price': current_price,
+                'change': change
+            })
 
         return other_stocks
 
