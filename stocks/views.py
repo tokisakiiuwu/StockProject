@@ -4,7 +4,6 @@ from django.core.cache import cache
 import pandas as pd
 import yfinance as yf
 import json
-import time
 import random
 
 from .models import ListAmericanCompanies
@@ -12,6 +11,15 @@ from .models import ListAmericanCompanies
 from scipy.optimize import minimize
 import numpy as np
 
+from utils.pytorch_model import predict_next_month_price
+
+from typing import TypedDict
+
+class ModelPrediction(TypedDict):
+    predicted_price: float
+    actual_price: float
+    decision: str
+    decision_color: str
 
 def optimize_portfolio(request):
     """
@@ -211,6 +219,7 @@ def stock_search(request):
     Main stock search view using caching & graceful handling of rate-limit errors.
     """
     context = {}
+    context_prediction = {}
     ticker = request.GET.get('ticker', 'AAPL').upper()
 
     if request.method == 'POST':
@@ -244,6 +253,26 @@ def stock_search(request):
         # Compute 50-day EMA
         hist_data['EMA50'] = hist_data['Close'].ewm(span=50, adjust=False).mean()
         hist_data.dropna(inplace=True)
+
+        # Predict next month's price using trained PyTorch model
+        try:
+            predicted_price = predict_next_month_price(hist_data.copy())
+            actual_price = round(hist_data['Close'].iloc[-1], 2)
+            decision = "BUY" if predicted_price > actual_price else "SELL"
+            decision_color = "green" if decision == "BUY" else "red"
+
+            context_prediction = ModelPrediction(
+                predicted_price=predicted_price,
+                actual_price=actual_price,
+                decision=decision,
+                decision_color=decision_color
+            )
+
+            print(f"Predictions complete")
+
+        except Exception as e:
+            print(f"Prediction error: {e}")
+            context['model_prediction'] = None
 
         # Prepare chart data
         chart_data = {
@@ -308,6 +337,7 @@ def stock_search(request):
 
     # Add recent searches to context
     context['recent_searches'] = recent_searches
+    context['model_prediction'] = context_prediction
 
     return render(request, 'index.html', context)
 
