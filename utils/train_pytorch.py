@@ -7,14 +7,19 @@ import joblib
 import os
 
 class StockLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size=64):
+    def __init__(self, input_size, hidden_size=64, num_layers=2, output_size=1):
         super(StockLSTM, self).__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, 1)
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        lstm_out, _ = self.lstm(x)
-        return self.fc(lstm_out[:, -1, :])
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).requires_grad_()
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).requires_grad_()
+        out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
+        out = self.fc(out[:, -1, :])
+        return out
 
 def add_lag_features(df, columns, lags=[1, 2, 3]):
     for col in columns:
@@ -54,8 +59,8 @@ def train_model(df: pd.DataFrame):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
-        if epoch % 100 == 0:
-            print(f"Epoch {epoch} - Loss: {loss.item():.6f}")
+        if (epoch + 1) % 10 == 0:
+            print(f"Epoch {epoch + 1} - Loss: {loss.item():.6f}")
 
     os.makedirs("models", exist_ok=True)
     torch.save(model.state_dict(), "models/lstm_model.pt")

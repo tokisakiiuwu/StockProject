@@ -5,14 +5,19 @@ import numpy as np
 import joblib
 
 class StockLSTM(nn.Module):
-    def __init__(self, input_size, hidden_size=64):
+    def __init__(self, input_size, hidden_size=64, num_layers=2, output_size=1):
         super(StockLSTM, self).__init__()
-        self.lstm = nn.LSTM(input_size, hidden_size, batch_first=True)
-        self.fc = nn.Linear(hidden_size, 1)
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers, batch_first=True)
+        self.fc = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        lstm_out, _ = self.lstm(x)
-        return self.fc(lstm_out[:, -1, :])
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).requires_grad_()
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).requires_grad_()
+        out, (hn, cn) = self.lstm(x, (h0.detach(), c0.detach()))
+        out = self.fc(out[:, -1, :])
+        return out
 
 def add_lag_features(df, columns, lags=[1, 2, 3]):
     for col in columns:
@@ -41,7 +46,9 @@ def predict_next_month_price(df: pd.DataFrame):
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32).unsqueeze(0)
 
     model = StockLSTM(input_size=len(feature_cols))
-    model.load_state_dict(torch.load("models/lstm_model.pt", map_location=torch.device('cpu')))
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.load_state_dict(torch.load("models/lstm_model.pt", map_location=device))
+    model.to(device)
     model.eval()
 
     with torch.no_grad():
