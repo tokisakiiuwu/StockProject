@@ -6,6 +6,8 @@ from sklearn.preprocessing import MinMaxScaler
 import joblib
 import os
 
+
+# This section is used to train the model first, done in Terminal, update model following README
 class StockLSTM(nn.Module):
     def __init__(self, input_size, hidden_size=64, num_layers=2, output_size=1):
         super(StockLSTM, self).__init__()
