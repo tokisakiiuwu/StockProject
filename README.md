@@ -11,9 +11,9 @@ When launching the Project and the Predictions is not appearing, then:
 
 > python manage.py shell
 
-> from utils.train_pytorch import train_model
-> from stocks.views import get_stock_history_cached
-> df = get_stock_history_cached("AAPL", period="2y")
-> train_model(df)
+> from utils.train_pytorch import train_model  
+> from stocks.views import get_stock_history_cached  
+> df = get_stock_history_cached("AAPL", period="2y")  
+> train_model(df)  
 
 **Disclaimer**: This project and report was created with the assistance of AI tools, including ChatGPT, to help in structuring and drafting the content. While the AI contributed to the writing process, all technical details, analysis, and final content have been carefully reviewed and validated by the authors. Every effort has been made to ensure the accuracy and reliability of the information presented. 
