@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import joblib
 
+# LSTM class model
 class StockLSTM(nn.Module):
     def __init__(self, input_size, hidden_size=64, num_layers=2, output_size=1):
         super(StockLSTM, self).__init__()
@@ -19,12 +20,14 @@ class StockLSTM(nn.Module):
         out = self.fc(out[:, -1, :])
         return out
 
+# adding the lag features  function
 def add_lag_features(df, columns, lags=[1, 2, 3]):
     for col in columns:
         for lag in lags:
             df[f'{col}_lag{lag}'] = df[col].shift(lag)
     return df
 
+# getting the features and lagging them function
 def prepare_features(df):
     df = df.copy()
     df['EMA50'] = df['Close'].ewm(span=50, adjust=False).mean()
@@ -33,14 +36,17 @@ def prepare_features(df):
     df.dropna(inplace=True)
     return df
 
+# loading the model with the data to predict next month's stocks
 def predict_next_month_price(df: pd.DataFrame):
     if df.shape[0] < 100:
         return None  # not enough data
 
     df = prepare_features(df.tail(252))
 
-    scaler_x, scaler_y, feature_cols = joblib.load("models/scalers.pkl")
 
+    scaler_x, scaler_y, feature_cols = joblib.load("models/scalers.pkl") # trained model loaded
+
+    # data needs to be scaled so that it predicts better
     last_row = df[feature_cols].values[-1:]
     X_scaled = scaler_x.transform(last_row)
     X_tensor = torch.tensor(X_scaled, dtype=torch.float32).unsqueeze(0)
@@ -51,6 +57,7 @@ def predict_next_month_price(df: pd.DataFrame):
     model.to(device)
     model.eval()
 
+    # Unscale the predicted data using the previous scalers
     with torch.no_grad():
         pred_scaled = model(X_tensor).item()
         pred = scaler_y.inverse_transform([[pred_scaled]])[0][0]
